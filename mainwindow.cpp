@@ -77,10 +77,8 @@ void MainWindow::lightStatusChanged(bool status)
     m_lightStatus = status;
     if(m_lightStatus){
         ui->light_img->setEnabled(true);
-        ui->light_text->setText(tr("已打开"));
     }else{
         ui->light_img->setEnabled(false);
-        ui->light_text->setText(tr("已关闭"));
     }
 }
 
@@ -92,6 +90,13 @@ void MainWindow::tempValueChanged(double temp)
 void MainWindow::humidityValueChanged(double humidity)
 {
     ui->humidity_text->setText(QString::number(humidity) + "%");
+
+    // 如果设置自动浇水并且土壤湿度低于阈值
+    if(m_autoWater && humidity>ui->pump_threshold->text().toDouble()){
+        m_serialPort.write("{'P':1}");
+    }else{
+        m_serialPort.write("{'P':0}");
+    }
 }
 
 void MainWindow::pumpStatusChanged(bool status)
@@ -99,10 +104,17 @@ void MainWindow::pumpStatusChanged(bool status)
     m_pumpStatus = status;
     if(m_pumpStatus){
         ui->pump_img->setEnabled(true);
-        ui->pump_text->setText(tr("浇水中"));
     }else{
         ui->pump_img->setEnabled(false);
-        ui->pump_text->setText(tr("未浇水"));
+    }
+}
+
+void MainWindow::updateAutoWater()
+{
+    if(m_autoWater){
+        ui->autowaterBtn->setIcon(QIcon(":/images/switchOn.png"));
+    }else{
+        ui->autowaterBtn->setIcon(QIcon(":/images/switchOff.png"));
     }
 }
 
@@ -151,4 +163,10 @@ void MainWindow::on_bauds_activated(const QString &arg1)
 {
     m_serialPort.setBaudRate(arg1.toInt());
     on_serialBtn_clicked();
+}
+
+void MainWindow::on_autowaterBtn_clicked()
+{
+    m_autoWater = ! m_autoWater;
+    updateAutoWater();
 }

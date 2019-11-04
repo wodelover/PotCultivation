@@ -6,5 +6,7 @@
         <file>images/pump.png</file>
         <file>images/temp.png</file>
         <file>images/plant.png</file>
+        <file>images/switchOff.png</file>
+        <file>images/switchOn.png</file>
     </qresource>
 </RCC>
