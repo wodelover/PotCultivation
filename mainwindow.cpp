@@ -38,10 +38,11 @@ void MainWindow::handleSerialData()
 
     // [1] 定义数据缓冲区并读取数据
     static QByteArray cache = "";
-    cache = m_serialPort.readAll();
+    cache += m_serialPort.readAll();
 
     // [2] 判断数据是否接收正确
     if(cache.startsWith('{')&&cache.endsWith('}')){
+
         // (0) 将缓冲区数据转换为JSon对象获取里面的值
         QJsonDocument doc = QJsonDocument::fromJson(cache);
         QJsonObject obj = doc.object();
@@ -49,14 +50,16 @@ void MainWindow::handleSerialData()
         // (1) 分别获取里面的值
         double temp = obj.value("temp").toDouble();
         double humidity = obj.value("humidity").toDouble();
-        bool lightStatus = obj.value("L").toInt();
-        bool pumpStatus = obj.value("P").toInt();
+        bool lightStatus = obj.value("light").toInt();
+        bool pumpStatus = obj.value("water").toInt();
 
         // (2) 更新对应的值
         tempValueChanged(temp);
         humidityValueChanged(humidity);
         lightStatusChanged(lightStatus);
         pumpStatusChanged(pumpStatus);
+
+        cache.clear();
     }
 }
 
@@ -77,8 +80,10 @@ void MainWindow::lightStatusChanged(bool status)
     m_lightStatus = status;
     if(m_lightStatus){
         ui->light_img->setEnabled(true);
+        ui->lightBtn->setText("关闭关照");
     }else{
         ui->light_img->setEnabled(false);
+        ui->lightBtn->setText("打开关照");
     }
 }
 
@@ -92,7 +97,7 @@ void MainWindow::humidityValueChanged(double humidity)
     ui->humidity_text->setText(QString::number(humidity) + "%");
 
     // 如果设置自动浇水并且土壤湿度低于阈值
-    if(m_autoWater && humidity>ui->pump_threshold->text().toDouble()){
+    if(m_autoWater && humidity<ui->pump_threshold->text().toDouble()){
         m_serialPort.write("{'P':1}");
     }else{
         m_serialPort.write("{'P':0}");
@@ -104,8 +109,10 @@ void MainWindow::pumpStatusChanged(bool status)
     m_pumpStatus = status;
     if(m_pumpStatus){
         ui->pump_img->setEnabled(true);
+        ui->pumpBtn->setText("浇水中");
     }else{
         ui->pump_img->setEnabled(false);
+        ui->pumpBtn->setText("未浇水");
     }
 }
 
